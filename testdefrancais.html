@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quiz Français</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 20px auto;
+    background-color: #fff;
+    color: #000;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.dark {
+    background-color: #121212;
+    color: #ddd;
+  }
+  .question {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  .options button {
+    margin: 5px 0;
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: 1px solid #888;
+    background-color: #f0f0f0;
+    color: #000;
+  }
+  body.dark .options button {
+    background-color: #222;
+    color: #ddd;
+    border-color: #555;
+  }
+  .options button.correct {
+    background-color: #d4edda;
+    color: #155724;
+    font-weight: bold;
+  }
+  body.dark .options button.correct {
+    background-color: #305530;
+    color: #b9fbb9;
+  }
+  .options button.wrong {
+    background-color: #f8d7da;
+    color: #721c24;
+    font-weight: bold;
+  }
+  body.dark .options button.wrong {
+    background-color: #703030;
+    color: #fbb9b9;
+  }
+  .options button.selected {
+    font-weight: bold;
+  }
+  .options button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  #score {
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  #startBtn {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+  }
+  #modeSelect {
+    margin-right: 10px;
+    padding: 5px;
+  }
+  #controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  #darkModeBtn {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  .highlight {
+    font-weight: bold;
+  }
+  .correctHighlight {
+    color: #155724; /* vert */
+  }
+  .wrongHighlight {
+    color: #721c24; /* rouge */
+  }
+</style>
+</head>
+<body>
+
+<h1>Quiz Français - Verbes</h1>
+
+<div id="controls">
+  <div>
+    <label for="modeSelect">Choisir la difficulté :</label>
+    <select id="modeSelect">
+      <option value="easy">Facile</option>
+      <option value="hard">Difficile</option>
+    </select>
+    <button id="startBtn">Démarrer le quiz</button>
+  </div>
+  <button id="darkModeBtn">Mode Sombre</button>
+</div>
+
+<div id="quiz"></div>
+
+<div id="score"></div>
+
+<script>
+const easyBank = [
+  { phrase: "Je {mot} une pomme.", options: ["mange", "lit", "écoute", "vois"], correctIndex: 0 },
+  { phrase: "Tu {mot} un livre.", options: ["lis", "manges", "joues", "parles"], correctIndex: 0 },
+  { phrase: "Il {mot} la télévision.", options: ["regarde", "écoute", "lit", "écrit"], correctIndex: 0 },
+  { phrase: "Elle {mot} une chanson.", options: ["écoute", "regarde", "mange", "lit"], correctIndex: 0 },
+  { phrase: "Nous {mot} au ballon.", options: ["jouons", "lisons", "mangeons", "parlons"], correctIndex: 0 },
+  { phrase: "Vous {mot} le journal.", options: ["lisez", "écoutez", "mangez", "regardez"], correctIndex: 0 },
+  { phrase: "Ils {mot} au professeur.", options: ["écoutent", "jouent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Elles {mot} une histoire.", options: ["lisent", "écoutent", "jouent", "mangent"], correctIndex: 0 },
+  { phrase: "Je {mot} un message.", options: ["écris", "lis", "regarde", "écoute"], correctIndex: 0 },
+  { phrase: "Tu {mot} la radio.", options: ["écoutes", "manges", "joues", "vois"], correctIndex: 0 },
+  { phrase: "Il {mot} un texte.", options: ["écrit", "lit", "écoute", "regarde"], correctIndex: 0 },
+  { phrase: "Elle {mot} un film.", options: ["regarde", "écoute", "lit", "joue"], correctIndex: 0 },
+  { phrase: "Nous {mot} ensemble.", options: ["jouons", "écoutons", "mangeons", "lisons"], correctIndex: 0 },
+  { phrase: "Vous {mot} la musique.", options: ["écoutez", "jouez", "mangez", "regardez"], correctIndex: 0 },
+  { phrase: "Ils {mot} un conte.", options: ["lisent", "écoutent", "jouent", "mangent"], correctIndex: 0 },
+  { phrase: "Elles {mot} au parc.", options: ["jouent", "écoutent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Je {mot} le dîner.", options: ["mange", "écoute", "joue", "regarde"], correctIndex: 0 },
+  { phrase: "Tu {mot} la télé.", options: ["regardes", "écoutes", "manges", "joues"], correctIndex: 0 },
+  { phrase: "Il {mot} une lettre.", options: ["écrit", "lit", "écoute", "regarde"], correctIndex: 0 },
+  { phrase: "Elle {mot} un poème.", options: ["lit", "écoute", "joue", "mange"], correctIndex: 0 },
+  { phrase: "Nous {mot} une histoire.", options: ["lisons", "écoutons", "jouons", "mangeons"], correctIndex: 0 },
+  { phrase: "Vous {mot} un jeu.", options: ["jouez", "écoutez", "mangez", "regardez"], correctIndex: 0 },
+  { phrase: "Ils {mot} le professeur.", options: ["écoutent", "jouent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Elles {mot} un spectacle.", options: ["regardent", "écoutent", "jouent", "mangent"], correctIndex: 0 },
+  { phrase: "Je {mot} une chanson.", options: ["écoute", "mange", "joue", "regarde"], correctIndex: 0 },
+];
+
+const hardBank = [
+  { phrase: "Elle {mot} une équation complexe.", options: ["résout", "voit", "mange", "lit"], correctIndex: 0 },
+  { phrase: "Nous {mot} une stratégie innovante.", options: ["concevons", "voyons", "mangeons", "lisons"], correctIndex: 0 },
+  { phrase: "Ils {mot} un système sophistiqué.", options: ["analysent", "écoutent", "jouent", "mangent"], correctIndex: 0 },
+  { phrase: "Tu {mot} une hypothèse scientifique.", options: ["formules", "manges", "vois", "écoutes"], correctIndex: 0 },
+  { phrase: "Je {mot} un problème difficile.", options: ["résous", "écoute", "mange", "vois"], correctIndex: 0 },
+  { phrase: "Elle {mot} une théorie complexe.", options: ["explique", "lit", "joue", "mange"], correctIndex: 0 },
+  { phrase: "Nous {mot} un concept abstrait.", options: ["synthétisons", "écoutons", "regardons", "jouons"], correctIndex: 0 },
+  { phrase: "Ils {mot} une analyse détaillée.", options: ["font", "écoutent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Tu {mot} une solution adaptée.", options: ["proposes", "écoutes", "joues", "manges"], correctIndex: 0 },
+  { phrase: "Je {mot} les résultats.", options: ["interprète", "mange", "écoute", "vois"], correctIndex: 0 },
+  { phrase: "Elle {mot} un argument convaincant.", options: ["présente", "lit", "joue", "mange"], correctIndex: 0 },
+  { phrase: "Nous {mot} un raisonnement logique.", options: ["suivons", "écoutons", "regardons", "jouons"], correctIndex: 0 },
+  { phrase: "Ils {mot} une hypothèse testable.", options: ["formulent", "écoutent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Tu {mot} une observation précise.", options: ["fais", "écoutes", "joues", "manges"], correctIndex: 0 },
+  { phrase: "Je {mot} une démonstration rigoureuse.", options: ["construis", "mange", "écoute", "vois"], correctIndex: 0 },
+  { phrase: "Elle {mot} une synthèse claire.", options: ["réalise", "lit", "joue", "mange"], correctIndex: 0 },
+  { phrase: "Nous {mot} une critique constructive.", options: ["formulons", "écoutons", "regardons", "jouons"], correctIndex: 0 },
+  { phrase: "Ils {mot} un modèle mathématique.", options: ["créent", "écoutent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Tu {mot} une expérimentation.", options: ["mènes", "écoutes", "joues", "manges"], correctIndex: 0 },
+  { phrase: "Je {mot} un protocole strict.", options: ["suis", "mange", "écoute", "vois"], correctIndex: 0 },
+  { phrase: "Elle {mot} une étude approfondie.", options: ["réalise", "lit", "joue", "mange"], correctIndex: 0 },
+  { phrase: "Nous {mot} une enquête minutieuse.", options: ["menons", "écoutons", "regardons", "jouons"], correctIndex: 0 },
+  { phrase: "Ils {mot} un rapport détaillé.", options: ["rédigent", "écoutent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Tu {mot} une analyse critique.", options: ["fais", "écoutes", "joues", "manges"], correctIndex: 0 },
+  { phrase: "Je {mot} une conclusion pertinente.", options: ["tire", "mange", "écoute", "vois"], correctIndex: 0 }
+];
+
+const quizDiv = document.getElementById('quiz');
+const scoreDiv = document.getElementById('score');
+const startBtn = document.getElementById('startBtn');
+const modeSelect = document.getElementById('modeSelect');
+const darkModeBtn = document.getElementById('darkModeBtn');
+const controlsDiv = document.getElementById('controls');
+
+let currentQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+
+function loadQuestions(mode) {
+  let bank = mode === 'hard' ? hardBank : easyBank;
+  return bank
+    .map(q => ({ ...q }))
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 15);
+}
+
+function displayQuestion() {
+  const q = currentQuestions[currentIndex];
+  quizDiv.innerHTML = '';
+
+  // Découper la phrase en 2 parties autour de {mot}
+  const parts = q.phrase.split('{mot}');
+
+  // Création élément phrase avec mot à colorer selon résultat
+  const phraseDiv = document.createElement('div');
+  phraseDiv.className = 'question';
+
+  // On insère texte avant mot
+  phraseDiv.appendChild(document.createTextNode(parts[0]));
+
+  // Le mot (option choisie ou placeholder)
+  const motSpan = document.createElement('span');
+  motSpan.className = 'highlight';
+  motSpan.textContent = q.selectedOption ?? '____';
+
+  // On ne colorie pas tant que pas répondu
+  if (answered) {
+    if (q.selectedOption === q.options[q.correctIndex]) {
+      motSpan.classList.add('correctHighlight');
+    } else {
+      motSpan.classList.add('wrongHighlight');
+    }
+  }
+  phraseDiv.appendChild(motSpan);
+
+  // Texte après mot
+  phraseDiv.appendChild(document.createTextNode(parts[1]));
+
+  quizDiv.appendChild(phraseDiv);
+
+  // Boutons options
+  const optionsDiv = document.createElement('div');
+  optionsDiv.className = 'options';
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.disabled = answered;
+    btn.onclick = () => {
+      if (answered) return;
+
+      answered = true;
+      q.selectedOption = opt;
+
+      // Vérif réponse
+      if (i === q.correctIndex) {
+        score++;
+      }
+
+      displayQuestion();
+      displayScore();
+
+      // Après 1.5s passer à la suivante
+      setTimeout(() => {
+        currentIndex++;
+        if (currentIndex < currentQuestions.length) {
+          answered = false;
+          displayQuestion();
+        } else {
+          quizDiv.innerHTML = `<h2>Quiz terminé ! Votre score est ${score} / ${currentQuestions.length}</h2>`;
+          scoreDiv.textContent = '';
+          startBtn.disabled = false;
+          modeSelect.disabled = false;
+        }
+      }, 1500);
+    };
+    optionsDiv.appendChild(btn);
+  });
+
+  quizDiv.appendChild(optionsDiv);
+
+  // Désactivation start & mode tant que quiz en cours
+  startBtn.disabled = true;
+  modeSelect.disabled = true;
+}
+
+function displayScore() {
+  scoreDiv.textContent = `Score : ${score} / ${currentQuestions.length}`;
+}
+
+startBtn.onclick = () => {
+  score = 0;
+  currentIndex = 0;
+  answered = false;
+  currentQuestions = loadQuestions(modeSelect.value);
+  displayQuestion();
+  displayScore();
+};
+
+darkModeBtn.onclick = () => {
+  document.body.classList.toggle('dark');
+};
+
+// Masquer modeSelect pour test, sinon laisser visible
+// modeSelect.style.display = 'none';
+
+</script>
+
+</body>
+</html>
+
