@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Français - Verbes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #fff;
+      color: #000;
+    }
+    body.dark {
+      background-color: #121212;
+      color: #ddd;
+    }
+    .question {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .options button, #nextBtn, #speakBtn {
+      margin: 5px 0;
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      border: 1px solid #888;
+      background-color: #f0f0f0;
+      color: #000;
+    }
+    body.dark .options button, body.dark #nextBtn, body.dark #speakBtn {
+      background-color: #222;
+      color: #ddd;
+      border-color: #555;
+    }
+    .options button.correct {
+      background-color: #d4edda;
+      color: #155724;
+      font-weight: bold;
+    }
+    body.dark .options button.correct {
+      background-color: #305530;
+      color: #b9fbb9;
+    }
+    .options button.wrong {
+      background-color: #f8d7da;
+      color: #721c24;
+      font-weight: bold;
+    }
+    body.dark .options button.wrong {
+      background-color: #703030;
+      color: #fbb9b9;
+    }
+    .highlight {
+      font-weight: bold;
+    }
+    .correctHighlight {
+      color: #155724;
+    }
+    .wrongHighlight {
+      color: #721c24;
+    }
+    #score {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #startSection {
+      margin-bottom: 20px;
+    }
+    #darkModeBtn {
+      padding: 5px 10px;
+      font-size: 0.9em;
+      cursor: pointer;
+      float: right;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Quiz Français - Verbes</h1>
+
+<div id="startSection">
+  <label for="modeSelect">Choisir la difficulté :</label>
+  <select id="modeSelect">
+    <option value="easy">Facile</option>
+    <option value="hard">Difficile</option>
+  </select>
+  <button id="startBtn">Démarrer le quiz</button>
+  <div id="modeDescription" style="margin-top:10px; font-style: italic; color: #666;">
+    Le mode <strong>facile</strong> contient des verbes réguliers et simples au présent, tandis que le mode <strong>difficile</strong> inclut des verbes du 3ᵉ groupe, des verbes irréguliers et des temps composés comme le passé composé.
+  </div>
+</div>
+
+<button id="darkModeBtn">Mode Sombre</button>
+
+<div id="quiz"></div>
+<div id="score"></div>
+
+<script>
+const easyBank = [
+  { phrase: "Je {mot} une pomme.", options: ["mange", "lit", "écoute", "vois"], correctIndex: 0 },
+  { phrase: "Tu {mot} un livre.", options: ["lis", "manges", "joues", "parles"], correctIndex: 0 },
+  { phrase: "Il {mot} la télévision.", options: ["regarde", "écoute", "lit", "écrit"], correctIndex: 0 },
+  { phrase: "Nous {mot} ensemble.", options: ["jouons", "écoutons", "mangeons", "lisons"], correctIndex: 0 },
+  { phrase: "Vous {mot} la musique.", options: ["écoutez", "jouez", "mangez", "regardez"], correctIndex: 0 },
+  { phrase: "Ils {mot} une histoire.", options: ["lisent", "écoutent", "jouent", "mangent"], correctIndex: 0 },
+  { phrase: "Elles {mot} au parc.", options: ["jouent", "écoutent", "mangent", "voient"], correctIndex: 0 },
+  { phrase: "Je {mot} le dîner.", options: ["mange", "écoute", "joue", "regarde"], correctIndex: 0 },
+  { phrase: "Tu {mot} la télé.", options: ["regardes", "écoutes", "manges", "joues"], correctIndex: 0 },
+  { phrase: "Nous {mot} une chanson.", options: ["écoutons", "jouons", "mangeons", "lisons"], correctIndex: 0 },
+];
+
+const hardBank = [
+  { phrase: "Hier, il {mot} à Paris en train.", options: ["est allé", "va", "ira", "allait"], correctIndex: 0 },
+  { phrase: "Elles {mot} tout le week-end.", options: ["ont dormi", "dorment", "dormiront", "dormaient"], correctIndex: 0 },
+  { phrase: "Je {mot} la vérité.", options: ["dis", "dit", "dirai", "disait"], correctIndex: 0 },
+  { phrase: "Tu {mot} souvent cette erreur.", options: ["fais", "fait", "faisais", "feras"], correctIndex: 0 },
+  { phrase: "Nous {mot} un bon film hier soir.", options: ["avons vu", "voyons", "verrons", "voyions"], correctIndex: 0 },
+  { phrase: "Vous {mot} à ce concert l’an dernier ?", options: ["êtes allés", "allez", "alliez", "iriez"], correctIndex: 0 },
+  { phrase: "Ils {mot} leurs devoirs à temps.", options: ["ont fait", "font", "faisaient", "feront"], correctIndex: 0 },
+  { phrase: "Je {mot} depuis trois heures.", options: ["attends", "attendais", "ai attendu", "attendrai"], correctIndex: 0 },
+  { phrase: "Tu {mot} cette chanson ?", options: ["as entendu", "entends", "entendais", "entendras"], correctIndex: 0 },
+  { phrase: "Il {mot} ce que je lui ai dit.", options: ["comprend", "comprenait", "a compris", "comprendra"], correctIndex: 2 },
+  { phrase: "Elles {mot} un roman compliqué.", options: ["lisent", "lisaient", "ont lu", "liraient"], correctIndex: 2 },
+  { phrase: "Nous {mot} une lettre importante.", options: ["avons écrit", "écrivons", "écrivions", "écrirons"], correctIndex: 0 },
+  { phrase: "Vous {mot} la réponse hier ?", options: ["avez su", "savez", "sachiez", "saurez"], correctIndex: 0 },
+  { phrase: "Je {mot} quand tu m’as appelé.", options: ["dormais", "dors", "ai dormi", "dormirai"], correctIndex: 0 },
+  { phrase: "Il {mot} soudainement en classe.", options: ["a parlé", "parle", "parlait", "parlera"], correctIndex: 0 },
+];
+
+const quizDiv = document.getElementById('quiz');
+const scoreDiv = document.getElementById('score');
+const startBtn = document.getElementById('startBtn');
+const modeSelect = document.getElementById('modeSelect');
+const darkModeBtn = document.getElementById('darkModeBtn');
+const startSection = document.getElementById('startSection');
+
+let currentQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'fr-FR';
+  window.speechSynthesis.speak(utterance);
+}
+
+function loadQuestions(mode) {
+  const bank = mode === 'hard' ? hardBank : easyBank;
+  return bank.sort(() => Math.random() - 0.5).slice(0, 10);
+}
+
+function displayQuestion() {
+  const q = currentQuestions[currentIndex];
+  quizDiv.innerHTML = '';
+
+  const parts = q.phrase.split('{mot}');
+  const phraseDiv = document.createElement('div');
+  phraseDiv.className = 'question';
+  phraseDiv.appendChild(document.createTextNode(parts[0]));
+
+  const motSpan = document.createElement('span');
+  motSpan.className = 'highlight';
+  motSpan.textContent = q.selectedOption ?? '____';
+
+  if (answered) {
+    motSpan.classList.add(
+      q.selectedOption === q.options[q.correctIndex]
+        ? 'correctHighlight'
+        : 'wrongHighlight'
+    );
+  }
+
+  phraseDiv.appendChild(motSpan);
+  phraseDiv.appendChild(document.createTextNode(parts[1]));
+  quizDiv.appendChild(phraseDiv);
+
+  const optionsDiv = document.createElement('div');
+  optionsDiv.className = 'options';
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.disabled = answered;
+    btn.onclick = () => {
+      if (answered) return;
+      answered = true;
+      q.selectedOption = opt;
+      if (i === q.correctIndex) score++;
+      displayQuestion();
+      displayScore();
+    };
+    optionsDiv.appendChild(btn);
+  });
+
+  quizDiv.appendChild(optionsDiv);
+
+  if (answered) {
+    const speakBtn = document.createElement('button');
+    speakBtn.id = "speakBtn";
+    speakBtn.textContent = "🔊 Écouter la phrase";
+    speakBtn.onclick = () => {
+      const fullSentence = q.phrase.replace('{mot}', q.selectedOption);
+      speak(fullSentence);
+    };
+    quizDiv.appendChild(speakBtn);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.id = "nextBtn";
+    nextBtn.textContent = "➡️ Question suivante";
+    nextBtn.onclick = () => {
+      currentIndex++;
+      if (currentIndex < currentQuestions.length) {
+        answered = false;
+        displayQuestion();
+      } else {
+        quizDiv.innerHTML = `<h2>Quiz terminé ! Score : ${score} / ${currentQuestions.length}</h2>`;
+        scoreDiv.textContent = '';
+        startSection.style.display = 'block';
+      }
+    };
+    quizDiv.appendChild(nextBtn);
+  }
+
+  displayScore();
+}
+
+function displayScore() {
+  scoreDiv.textContent = `Score : ${score} / ${currentQuestions.length}`;
+}
+
+startBtn.onclick = () => {
+  startSection.style.display = 'none';
+  score = 0;
+  currentIndex = 0;
+  answered = false;
+  currentQuestions = loadQuestions(modeSelect.value);
+  displayQuestion();
+};
+
+darkModeBtn.onclick = () => {
+  document.body.classList.toggle('dark');
+};
+</script>
+
+</body>
+</html>
+
